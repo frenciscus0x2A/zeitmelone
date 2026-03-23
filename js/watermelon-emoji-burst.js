@@ -1,15 +1,3 @@
-/**
- * Canvas watermelon 🍉 burst (always runs; not gated by prefers-reduced-motion).
- * The tap shake in watermelon-eating-sound.js still respects reduced motion.
- *
- * API: WatermelonKit.burstWatermelonEmojis(x, y, { count }) — default 1 per call;
- *      rapid clicks are batched: at most MAX_SPAWN_PER_RAF new particles per frame.
- * Motion: fast upward pop, then fall; z-accel for zoom-toward-viewer; cheap fake
- * 3D tilt (scaleY from cos(rx)). Single rAF: drain spawn queue + simulate + draw.
- * Pro perf: FX canvas at 1× DPR, emoji baked to an offscreen sprite (drawImage),
- * per-particle setTransform (no save/restore stack).
- * Debug: ?wcdebug=1, localStorage watermelon_fx_debug=1, or data-watermelon-debug="1"
- */
 (function (W) {
   "use strict";
 
@@ -18,23 +6,16 @@
     '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
 
   var DEFAULT_COUNT = 1;
-  /** Max particles spawned in one API call (each click uses default 1) */
   var MAX_PER_BURST = 32;
-  /** Global cap — draw cost scales linearly */
   var MAX_ALIVE = 300;
-  /** Per frame spawn budget (queue drains across frames) */
   var MAX_SPAWN_PER_RAF = 9;
-  /** Drop oldest pending jobs if the queue explodes */
   var PENDING_BURST_CAP = 36;
-  /** Full opacity until FADE_START; last FADE_LAST_MS eases out */
   var FADE_LAST_MS = 950;
   var PARTICLE_LIFETIME_MS = 4200;
   var FADE_START_MS = PARTICLE_LIFETIME_MS - FADE_LAST_MS;
 
   var DRAW_FONT_PX = 22;
-  /** Fullscreen FX layer: 1× backing store = far fewer pixels than device DPR 2 */
   var FX_CANVAS_DPR = 1;
-  /** Rasterize emoji once into this cell (CSS px) */
   var SPRITE_CELL = 112;
 
   var LS_KEY = "watermelon_fx_debug";
@@ -42,24 +23,19 @@
   var canvas = null;
   var ctx = null;
   var dpr = 1;
-  /** @type {HTMLCanvasElement|null} */
   var emojiSprite = null;
   var spriteHalfW = 0;
   var spriteHalfH = 0;
-  /** When measureText≈0, fall back to fillText path */
   var spriteOk = false;
   var particles = [];
   var pool = [];
   var rafId = null;
-  /** @type {{ cx: number, cy: number, n: number }[]} */
   var pendingBursts = [];
   var resizeBound = false;
   var lastBurst = { cx: 0, cy: 0, t: 0 };
   var firstTickLogged = false;
   var fxHelpPrinted = false;
-  /** One debug measurement; if width is tiny, draw vector fallback melon */
   var measuredEmojiW = -1;
-  /** Avoid URL/localStorage/DOM reads every frame in tick() */
   var debugCacheReady = false;
   var debugCacheVal = false;
 
@@ -95,10 +71,6 @@
     console.log.apply(console, a);
   }
 
-  /**
-   * Toggle persistent debug flag (localStorage).
-   * @param {boolean} on
-   */
   W.setWatermelonFxDebug = function setWatermelonFxDebug(on) {
     try {
       if (on) localStorage.setItem(LS_KEY, "1");
@@ -247,7 +219,6 @@
 
       p.x = cx + (Math.random() - 0.5) * 6;
       p.y = cy + (Math.random() - 0.5) * 6;
-      /* Strong upward launch (y+ is down; negative vy = up), then gravity wins */
       p.vx = Math.cos(ang) * sp * 0.62;
       p.vy = Math.sin(ang) * sp * 0.45 - (6.2 + Math.random() * 4.8);
       p.z = -1.12 + Math.random() * 0.2;
@@ -255,13 +226,11 @@
       p.g = 0.34 + Math.random() * 0.09;
       p.rot = (Math.random() - 0.5) * 0.75;
       p.vr = (Math.random() - 0.5) * 0.12;
-      /* Fake 3D: tilt radians + spin rate (no extra objects) */
       p.rx = (Math.random() - 0.5) * 0.55;
       p.vrx = (Math.random() - 0.5) * 0.16;
       p.t0 = tSpawn;
       particles.push(p);
     }
-
   }
 
   function ensureTick() {
@@ -270,9 +239,6 @@
     rafId = requestAnimationFrame(tick);
   }
 
-  /**
-   * @param {number} budget max new particles this call
-   */
   function drainPendingBursts(budget) {
     if (!ctx) return;
     while (pendingBursts.length > 0 && budget > 0) {
@@ -351,7 +317,6 @@
       p.x += p.vx;
       p.y += p.vy;
       p.vy += p.g;
-      /* Accelerate toward camera (zoom); slight extra rush while falling fast */
       p.vz += 0.00105;
       if (p.vy > 2.1) p.vz += 0.00055;
       p.z += p.vz;
@@ -360,7 +325,6 @@
       p.vrx *= 0.984;
       p.vx *= 0.996;
 
-      /* Only time ends a particle — do NOT cull by position/z or fade/timing never shows */
       var dead = ageMs > PARTICLE_LIFETIME_MS;
 
       if (dead) {
@@ -375,7 +339,6 @@
       if (t < 0) t = 0;
       if (t > 1) t = 1;
       var scale = 0.16 + t * 2.72;
-      /* Cheap “3D” tilt: squash Y like rotating around X toward the viewer */
       var flatY = 0.34 + 0.66 * Math.abs(Math.cos(p.rx));
       if (flatY < 0.34) flatY = 0.34;
       var fade;
@@ -385,12 +348,10 @@
         var u = (ageMs - FADE_START_MS) / FADE_LAST_MS;
         if (u < 0) u = 0;
         if (u > 1) u = 1;
-        /* Cosine ease: slope 0 at start & end of fade → no sharp “switch” */
         fade = 0.5 * (1 + Math.cos(Math.PI * u));
       }
       if (fade < 0) fade = 0;
       if (fade > 1) fade = 1;
-      /* Mild depth tint so opacity doesn’t jump from lighting alone */
       var alpha = fade * (0.97 + 0.03 * t);
 
       if (alpha < 0.018) {
@@ -469,11 +430,6 @@
     }
   }
 
-  /**
-   * @param {number} clientX
-   * @param {number} clientY
-   * @param {object} [options]
-   */
   W.burstWatermelonEmojis = function burstWatermelonEmojis(
     clientX,
     clientY,

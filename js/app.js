@@ -1,7 +1,3 @@
-/**
- * Bootstrap (file://-safe, no ES modules).
- * Script order in index.html: emoji-burst → clock → eating-sound → app
- */
 (function () {
   "use strict";
 

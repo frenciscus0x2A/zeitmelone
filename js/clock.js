@@ -1,7 +1,3 @@
-/**
- * Watermelon clock core (file://-safe).
- * Exposes: window.WatermelonKit.initWatermelonClock
- */
 (function (W) {
   "use strict";
 
@@ -53,18 +49,14 @@
       "translate(-50%, -100%) rotate(" + deg + "deg)";
   }
 
-  /** Idle: 20% slower than real time */
   var BASE_RATE = 0.8;
-  /** Per tap: add toward 7× wall-clock (clamped). */
   var TAP_RATE_STEP = 0.48;
   var MAX_RATE = 7;
-  /** Excess above BASE_RATE decays when not tapping */
   var RATE_DECAY_PER_S = 2.2;
 
   function startHands(cycleHand, hourHand, intervalMs) {
     var intervalSec = intervalMs / 1000;
     var lastNow = performance.now();
-    /** Wall-clock–weighted virtual seconds driving the hands */
     var virtualSec = 0;
     var rate = BASE_RATE;
     var lastCycle = -1;
@@ -117,10 +109,6 @@
     };
   }
 
-  /**
-   * @param {HTMLElement | null} root
-   * @returns {(() => void) | null}
-   */
   W.initWatermelonClock = function initWatermelonClock(root) {
     if (!root || !(root instanceof HTMLElement)) return null;
 
@@ -135,7 +123,6 @@
     var stopHands = startHands(cycleHand, hourHand, intervalMs);
 
     var SPECIAL_TAP_MSG = "/cto_it";
-    /** Above this count, show SPECIAL_TAP_MSG only (last k label is 999k) */
     var TAP_K_CAP = 999000;
 
     var tapRow = document.createElement("div");
@@ -143,10 +130,6 @@
     tapRow.id = "watermelonTapCount";
     tapRow.setAttribute("aria-live", "polite");
 
-    /**
-     * <1k : décimal normal.
-     * ≥1k : ⌊k⌋·r — « partie entière en milliers » · reste (notation math, court, cryptique mais décodable).
-     */
     function formatTapCountDisplay(n) {
       if (n > TAP_K_CAP) return SPECIAL_TAP_MSG;
       if (n < 1000) return String(n);
@@ -163,15 +146,15 @@
       tapRow.textContent = display;
       if (n > TAP_K_CAP) {
         tapRow.classList.add("watermelon-clock__tap-count--cto");
-        tapRow.setAttribute("aria-label", "Message spécial");
+        tapRow.setAttribute("aria-label", "Special message");
         tapRow.title = SPECIAL_TAP_MSG;
       } else {
         tapRow.classList.remove("watermelon-clock__tap-count--cto");
-        tapRow.setAttribute("aria-label", "Nombre de clics : " + n);
+        tapRow.setAttribute("aria-label", "Tap count: " + n);
         tapRow.title =
           n >= 1000 && n <= TAP_K_CAP
             ? display + " → " + n
-            : "Nombre de clics : " + n;
+            : "Tap count: " + n;
       }
     }
 
@@ -183,10 +166,6 @@
       applyTapCountUi(tapTotal, formatTapCountDisplay(tapTotal));
     }
 
-    /**
-     * Dev / debug: set total taps (syncs display, k format, /cto_it). Console: WatermelonKit.setWatermelonTapCount(998)
-     * @param {number} n
-     */
     function setTapCount(n) {
       var v = n | 0;
       if (v < 0) v = 0;

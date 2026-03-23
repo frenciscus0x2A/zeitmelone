@@ -1,28 +1,17 @@
-/* Watermelon clock — harmonized palette (flesh, rind, seeds, blossom hands) */
-
 :root {
-  /* Flesh: radial gradient tones */
   --flesh-highlight: #ffb3c9;
   --flesh-mid: #e9637c;
   --flesh-deep: #b83a52;
-
-  /* Rind: light stripe to deep forest green */
   --rind-bright: #9cf0d0;
   --rind-mid: #4aaf7a;
   --rind-dark: #1a3d2e;
   --rind-outer: #0f2a1f;
-
-  /* Seeds & center hub */
   --seed: #3d2618;
   --seed-shine: rgba(255, 255, 255, 0.06);
   --hub: #143828;
-
-  /* Hands: blossom-yellow accent */
   --hand: #ffe566;
   --hand-shadow: rgba(120, 60, 30, 0.35);
-
   --radius-full: 50%;
-
   --clock-size: 174px;
   --clock-seed-radius: 59.4px;
   --clock-skin-width: 5px;
@@ -59,13 +48,11 @@ body {
   position: relative;
 }
 
-/* Compteur sur la chair, juste sous le moyeu (au-dessus des aiguilles pour lisibilité) */
 .watermelon-clock__tap-count {
   position: absolute;
   left: 50%;
   top: calc(50% + var(--hub-size) * 0.5 + 5px);
   transform: translateX(-50%);
-  /* Derrière les cuillères (z 2–3) et le moyeu (z 4), au-dessus du fond chair */
   z-index: 1;
   box-sizing: border-box;
   min-width: 1.5em;
@@ -95,13 +82,11 @@ body {
   letter-spacing: 0.04em;
 }
 
-/* Optional module: eating-sound (see js/watermelon-eating-sound.js) */
 .watermelon-clock--interactive {
   cursor: pointer;
   transform-origin: center center;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  /* Defaults before first tap (JS overwrites each hit) */
   --hit-x1: 0px;
   --hit-y1: 0px;
   --hit-r1: 0deg;
@@ -128,7 +113,6 @@ body {
   outline-offset: 4px;
 }
 
-/* Click: random shock per tap (vars from watermelon-eating-sound.js) */
 @keyframes watermelon-tremble {
   0%,
   100% {
@@ -156,7 +140,6 @@ body {
   animation: watermelon-tremble 0.46s cubic-bezier(0.18, 1.1, 0.32, 1) both;
 }
 
-/* Same keyframes; JS scales --hit-* vars down when reduced motion is on */
 @media (prefers-reduced-motion: reduce) {
   .watermelon-clock--hit {
     animation: watermelon-tremble 0.32s ease-out both;
@@ -184,7 +167,6 @@ body {
   overflow: visible;
 }
 
-/* Dark green center hub */
 .clock-circle::after {
   content: "";
   position: absolute;
@@ -211,7 +193,6 @@ body {
   top: 50%;
   left: 50%;
   z-index: 1;
-  /* Seed-shaped ovals; long axis points outward (via rotate --angle) */
   width: 5.5px;
   height: 14px;
   border-radius: 48% 52% 55% 50% / 58% 58% 42% 45%;

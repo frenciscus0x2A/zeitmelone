@@ -1,13 +1,6 @@
-/**
- * Tap: jiggle + emoji burst + eating SFX (file://-safe).
- * Requires: watermelon-emoji-burst.js before this file.
- * Audio: small preloaded pool + min gap between starts; shock CSS coalesced to 1 reflow/frame.
- * Exposes: window.WatermelonKit.attachWatermelonEatingSound
- */
 (function (W) {
   "use strict";
 
-  /** Relative to index.html — works with file:// and http(s) */
   var DEFAULT_EATING_SOUND_URL = "assets/sounds/eating.mp3";
 
   var reducedMotionMq =
@@ -18,7 +11,6 @@
   function noop() {}
 
   var HIT_CLASS = "watermelon-clock--hit";
-  /** Slightly longer than CSS shock so the class stays until animation ends */
   var HIT_RESET_MS = 520;
   var tapHitState = new WeakMap();
 
@@ -44,10 +36,6 @@
     "--hit-r4",
   ];
 
-  /**
-   * New random “impact” each tap — CSS keyframes read these custom properties.
-   * @param {HTMLElement} root
-   */
   function setRandomShockVars(root) {
     var a = reducedMotionMq && reducedMotionMq.matches ? 0.38 : 1;
     function px(lo, hi) {
@@ -59,35 +47,27 @@
     function scl(lo, hi) {
       return (lo + Math.random() * (hi - lo)).toFixed(3);
     }
-    /* First slam: strong offset + skew “squash” */
     root.style.setProperty("--hit-x1", px(-11 * a, 11 * a));
     root.style.setProperty("--hit-y1", px(-9 * a, 9 * a));
     root.style.setProperty("--hit-r1", deg(-5.2 * a, 5.2 * a));
     root.style.setProperty("--hit-s1", scl(0.9, 0.98));
     root.style.setProperty("--hit-k1", deg(-7 * a, 7 * a));
     root.style.setProperty("--hit-k2", deg(-5 * a, 5 * a));
-    /* Counter-shock */
     root.style.setProperty("--hit-x2", px(-10 * a, 10 * a));
     root.style.setProperty("--hit-y2", px(-10 * a, 10 * a));
     root.style.setProperty("--hit-r2", deg(-4.8 * a, 4.8 * a));
     root.style.setProperty("--hit-s2", scl(1.01, 1.08));
     root.style.setProperty("--hit-k3", deg(-5 * a, 5 * a));
     root.style.setProperty("--hit-k4", deg(-4 * a, 4 * a));
-    /* Damped wobble */
     root.style.setProperty("--hit-x3", px(-6 * a, 6 * a));
     root.style.setProperty("--hit-y3", px(-5 * a, 5 * a));
     root.style.setProperty("--hit-r3", deg(-3 * a, 3 * a));
     root.style.setProperty("--hit-s3", scl(0.96, 1.04));
-    /* Tail */
     root.style.setProperty("--hit-x4", px(-3 * a, 3 * a));
     root.style.setProperty("--hit-y4", px(-2.5 * a, 2.5 * a));
     root.style.setProperty("--hit-r4", deg(-1.6 * a, 1.6 * a));
   }
 
-  /**
-   * At most one CSS reflow/restart per frame per root (many pointerdowns in one frame → one shock).
-   * @param {HTMLElement} root
-   */
   function scheduleTapShock(root) {
     var st = tapHitState.get(root);
     if (!st) {
@@ -122,15 +102,9 @@
     }, HIT_RESET_MS);
   }
 
-  /** Reused elements — avoids hundreds of decode/GC on spam-click */
   var AUDIO_POOL_SIZE = 4;
-  /** Skip redundant play() when pointer events pile up in one frame */
   var EAT_SOUND_MIN_GAP_MS = 55;
 
-  /**
-   * @param {HTMLAudioElement[]} pool
-   * @param {{ lastAt: number }} gate — one gate object per attach()
-   */
   function playFromPool(pool, gate) {
     if (!pool || !pool.length) return;
     try {
@@ -153,14 +127,9 @@
     } catch (e) {}
   }
 
-  /**
-   * @param {HTMLElement} root
-   * @param {object} [options]
-   * @param {string} [options.src]
-   */
   W.attachWatermelonEatingSound = function attachWatermelonEatingSound(
     root,
-    options
+    options,
   ) {
     options = options || {};
     if (!root || !(root instanceof HTMLElement)) return noop;
@@ -197,7 +166,6 @@
 
     function burstAt(x, y) {
       if (typeof W.burstWatermelonEmojis === "function") {
-        /* One melon per click; hundreds possible via fast repeated clicks */
         W.burstWatermelonEmojis(x, y);
       }
     }
@@ -215,27 +183,18 @@
       playFromPool(audioPool, soundGate);
     }
 
-    /**
-     * @param {MouseEvent} e
-     */
     function onClickFallback(e) {
       if (!root.contains(e.target)) return;
       if (e.button != null && e.button !== 0) return;
       onTap(e);
     }
 
-    /**
-     * @param {PointerEvent} e
-     */
     function onPointerDown(e) {
       if (!root.contains(e.target)) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
       onTap(e);
     }
 
-    /**
-     * @param {KeyboardEvent} e
-     */
     function onKeyDown(e) {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
@@ -252,7 +211,6 @@
       root.setAttribute("aria-label", prevLabel + addon);
     }
 
-    /* Single pointer path (avoid double fire: pointerdown + click) */
     var usePointer = typeof window.PointerEvent !== "undefined";
     if (usePointer) {
       root.addEventListener("pointerdown", onPointerDown, true);
