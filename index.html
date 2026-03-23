@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Interactive watermelon clock — tap for sound, emojis, and tempo."
+    />
+    <meta name="theme-color" content="#e9637c" />
+    <title>Watermelon clock</title>
+    <link rel="stylesheet" href="css/watermelon-clock.css" />
+  </head>
+  <body>
+    <div
+      class="watermelon-clock"
+      id="watermelonClock"
+      data-interval-ms="15000"
+      data-eating-sound
+      role="group"
+      aria-label="Watermelon clock: long hand turns smoothly; short spoon hand advances one dot each time the long hand passes the top"
+    >
+      <div
+        class="clock-circle"
+        id="clockCircle"
+        data-clock-face
+      ></div>
+    </div>
+    <!-- Order + defer: parallel fetch, run in order after parse (file:// + GitHub Pages) -->
+    <script defer src="js/watermelon-emoji-burst.js"></script>
+    <script defer src="js/clock.js"></script>
+    <script defer src="js/watermelon-eating-sound.js"></script>
+    <script defer src="js/app.js"></script>
+  </body>
+</html>

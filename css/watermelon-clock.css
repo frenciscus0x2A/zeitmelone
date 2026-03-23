@@ -1,0 +1,289 @@
+/* Watermelon clock — harmonized palette (flesh, rind, seeds, blossom hands) */
+
+:root {
+  /* Flesh: radial gradient tones */
+  --flesh-highlight: #ffb3c9;
+  --flesh-mid: #e9637c;
+  --flesh-deep: #b83a52;
+
+  /* Rind: light stripe to deep forest green */
+  --rind-bright: #9cf0d0;
+  --rind-mid: #4aaf7a;
+  --rind-dark: #1a3d2e;
+  --rind-outer: #0f2a1f;
+
+  /* Seeds & center hub */
+  --seed: #3d2618;
+  --seed-shine: rgba(255, 255, 255, 0.06);
+  --hub: #143828;
+
+  /* Hands: blossom-yellow accent */
+  --hand: #ffe566;
+  --hand-shadow: rgba(120, 60, 30, 0.35);
+
+  --radius-full: 50%;
+
+  --clock-size: 174px;
+  --clock-seed-radius: 59.4px;
+  --clock-skin-width: 5px;
+  --hub-size: 14px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  background: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+.watermelon-clock {
+  flex-shrink: 0;
+  line-height: 0;
+  overflow: visible;
+  position: relative;
+}
+
+/* Compteur sur la chair, juste sous le moyeu (au-dessus des aiguilles pour lisibilité) */
+.watermelon-clock__tap-count {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + var(--hub-size) * 0.5 + 5px);
+  transform: translateX(-50%);
+  /* Derrière les cuillères (z 2–3) et le moyeu (z 4), au-dessus du fond chair */
+  z-index: 1;
+  box-sizing: border-box;
+  min-width: 1.5em;
+  max-width: calc(100% - 8px);
+  padding: 0 2px;
+  line-height: 1.1;
+  font-size: clamp(0.95rem, 4vw, 1.28rem);
+  font-weight: 800;
+  font-family: system-ui, "Segoe UI Symbol", "Noto Sans Math", sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-align: center;
+  white-space: nowrap;
+  color: #fffef8;
+  pointer-events: none;
+  user-select: none;
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.55),
+    0 1px 0 rgba(26, 61, 46, 0.45),
+    0 2px 8px rgba(80, 20, 40, 0.35);
+}
+
+.watermelon-clock__tap-count--cto {
+  font-size: clamp(0.72rem, 3vw, 0.95rem);
+  font-weight: 700;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  letter-spacing: 0.04em;
+}
+
+/* Optional module: eating-sound (see js/watermelon-eating-sound.js) */
+.watermelon-clock--interactive {
+  cursor: pointer;
+  transform-origin: center center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* Defaults before first tap (JS overwrites each hit) */
+  --hit-x1: 0px;
+  --hit-y1: 0px;
+  --hit-r1: 0deg;
+  --hit-s1: 1;
+  --hit-k1: 0deg;
+  --hit-k2: 0deg;
+  --hit-x2: 0px;
+  --hit-y2: 0px;
+  --hit-r2: 0deg;
+  --hit-s2: 1;
+  --hit-k3: 0deg;
+  --hit-k4: 0deg;
+  --hit-x3: 0px;
+  --hit-y3: 0px;
+  --hit-r3: 0deg;
+  --hit-s3: 1;
+  --hit-x4: 0px;
+  --hit-y4: 0px;
+  --hit-r4: 0deg;
+}
+
+.watermelon-clock--interactive:focus-visible {
+  outline: 2px solid var(--rind-bright);
+  outline-offset: 4px;
+}
+
+/* Click: random shock per tap (vars from watermelon-eating-sound.js) */
+@keyframes watermelon-tremble {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1) skew(0deg, 0deg);
+  }
+  9% {
+    transform: translate(var(--hit-x1), var(--hit-y1)) rotate(var(--hit-r1))
+      scale(var(--hit-s1)) skew(var(--hit-k1), var(--hit-k2));
+  }
+  22% {
+    transform: translate(var(--hit-x2), var(--hit-y2)) rotate(var(--hit-r2))
+      scale(var(--hit-s2)) skew(var(--hit-k3), var(--hit-k4));
+  }
+  42% {
+    transform: translate(var(--hit-x3), var(--hit-y3)) rotate(var(--hit-r3))
+      scale(var(--hit-s3)) skew(0deg, 0deg);
+  }
+  68% {
+    transform: translate(var(--hit-x4), var(--hit-y4)) rotate(var(--hit-r4))
+      scale(1) skew(0deg, 0deg);
+  }
+}
+
+.watermelon-clock--hit {
+  animation: watermelon-tremble 0.46s cubic-bezier(0.18, 1.1, 0.32, 1) both;
+}
+
+/* Same keyframes; JS scales --hit-* vars down when reduced motion is on */
+@media (prefers-reduced-motion: reduce) {
+  .watermelon-clock--hit {
+    animation: watermelon-tremble 0.32s ease-out both;
+  }
+}
+
+.clock-circle {
+  position: relative;
+  width: var(--clock-size);
+  height: var(--clock-size);
+  border-radius: var(--radius-full);
+  background: radial-gradient(
+    circle at 32% 28%,
+    var(--flesh-highlight) 0%,
+    var(--flesh-mid) 38%,
+    var(--flesh-deep) 72%,
+    #9a2f45 100%
+  );
+  border: 11px solid var(--rind-bright);
+  box-shadow:
+    0 0 0 var(--clock-skin-width) var(--rind-mid),
+    0 0 0 calc(var(--clock-skin-width) + 3px) var(--rind-outer),
+    inset 0 2px 16px rgba(255, 255, 255, 0.12),
+    inset 0 -8px 24px rgba(80, 20, 40, 0.2);
+  overflow: visible;
+}
+
+/* Dark green center hub */
+.clock-circle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: var(--hub-size);
+  height: var(--hub-size);
+  border-radius: var(--radius-full);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle at 35% 30%,
+    #2a5c45 0%,
+    var(--hub) 55%,
+    #0a1f16 100%
+  );
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.seed {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  /* Seed-shaped ovals; long axis points outward (via rotate --angle) */
+  width: 5.5px;
+  height: 14px;
+  border-radius: 48% 52% 55% 50% / 58% 58% 42% 45%;
+  background: radial-gradient(
+    ellipse 85% 95% at 35% 22%,
+    #6a4a38 0%,
+    var(--seed) 48%,
+    #2a1810 88%,
+    #1a0f08 100%
+  );
+  box-shadow:
+    inset 0 1px 2px var(--seed-shine),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%) rotate(var(--angle))
+    translateY(calc(var(--clock-seed-radius) * -1));
+}
+
+.clock-hand {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  transform: translate(-50%, -100%) rotate(0deg);
+  border-radius: 3px;
+}
+
+.clock-hand--spoon {
+  background: linear-gradient(
+    90deg,
+    var(--hand) 0%,
+    #fff2a8 45%,
+    #ffd23c 100%
+  );
+}
+
+.clock-hand--spoon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 40% 40%;
+  background: linear-gradient(160deg, #fff8d4 0%, var(--hand) 40%, #e6a820 100%);
+  box-shadow:
+    0 3px 8px var(--hand-shadow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.45);
+}
+
+.clock-hand--cycle {
+  z-index: 3;
+  width: 6px;
+  height: calc(38% - 9px);
+  will-change: transform;
+  box-shadow: 1px 0 4px var(--hand-shadow);
+}
+
+.clock-hand--cycle.clock-hand--spoon::before {
+  top: -18px;
+  width: 18px;
+  height: 30px;
+}
+
+.clock-hand--hour {
+  z-index: 2;
+  width: 6px;
+  height: calc(28% - 8px);
+  transition: none;
+  will-change: transform;
+  box-shadow: 1px 0 3px var(--hand-shadow);
+}
+
+.clock-hand--hour.clock-hand--spoon::before {
+  top: -12px;
+  width: 12px;
+  height: 20px;
+}
